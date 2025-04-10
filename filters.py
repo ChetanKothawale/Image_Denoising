@@ -1,6 +1,55 @@
 import numpy as np
 from PIL import Image
 import statistics
+import math
+
+
+def gaussian_kernel(size, sigma=1):
+    """Generate a Gaussian kernel."""
+    kernel = [[0] * size for _ in range(size)]
+    sum_val = 0
+    offset = size // 2
+    
+    for x in range(size):
+        for y in range(size):
+            exp_part = math.exp(-((x - offset) ** 2 + (y - offset) ** 2) / (2 * sigma ** 2))
+            kernel[x][y] = exp_part / (2 * math.pi * sigma ** 2)
+            sum_val += kernel[x][y]
+    
+    # Normalize the kernel
+    for x in range(size):
+        for y in range(size):
+            kernel[x][y] /= sum_val
+    
+    return kernel
+
+def gaussian_filter(image, filter_size=3, sigma=1):
+    """Apply a Gaussian filter for smoothing an image."""
+    img = Image.fromarray(image)
+    pixels = img.load()
+    width, height = img.size
+    
+    filtered_image = Image.new("RGB", (width, height))
+    new_pixels = filtered_image.load()
+    kernel = gaussian_kernel(filter_size, sigma)
+    offset = filter_size // 2
+    
+    for x in range(offset, width - offset):
+        for y in range(offset, height - offset):
+            r_sum, g_sum, b_sum = 0, 0, 0
+            
+            for i in range(filter_size):
+                for j in range(filter_size):
+                    r, g, b = pixels[x + i - offset, y + j - offset]
+                    weight = kernel[i][j]
+                    r_sum += r * weight
+                    g_sum += g * weight
+                    b_sum += b * weight
+            
+            new_pixels[x, y] = (int(r_sum), int(g_sum), int(b_sum))
+    
+    return np.array(filtered_image)
+
 
 def butterworth_lowpass_filter(image, cutoff_freq, n=8):
     """Apply a Butterworth low-pass filter in the frequency domain to a color image."""
