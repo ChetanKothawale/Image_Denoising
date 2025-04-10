@@ -1,4 +1,6 @@
 import numpy as np
+from PIL import Image
+import statistics
 
 def butterworth_lowpass_filter(image, cutoff_freq, n=8):
     """Apply a Butterworth low-pass filter in the frequency domain to a color image."""
@@ -53,3 +55,34 @@ def anisotropic_diffusion(img, iterations=20, kappa=30, gamma=0.20, option=1):
         padded = np.pad(img, ((1,1), (1,1), (0,0)), mode='reflect')
 
     return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def median_filter(image, filter_size=5):
+    """Apply a Median Filter for noise removal."""
+    img = Image.fromarray(image)
+    pixels = img.load()
+    width, height = img.size
+
+    filtered_image = Image.new("RGB", (width, height))
+    new_pixels = filtered_image.load()
+
+    offset = filter_size // 2
+
+    for x in range(offset, width - offset):
+        for y in range(offset, height - offset):
+            r_vals, g_vals, b_vals = [], [], []
+
+            for i in range(-offset, offset + 1):
+                for j in range(-offset, offset + 1):
+                    r, g, b = pixels[x + i, y + j]
+                    r_vals.append(r)
+                    g_vals.append(g)
+                    b_vals.append(b)
+
+            median_r = statistics.median(r_vals)
+            median_g = statistics.median(g_vals)
+            median_b = statistics.median(b_vals)
+
+            new_pixels[x, y] = (int(median_r), int(median_g), int(median_b))
+
+    return np.array(filtered_image)
