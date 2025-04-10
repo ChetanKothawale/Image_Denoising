@@ -15,13 +15,11 @@ if uploaded_file:
 
     # Select filter type
     filter_choice = st.selectbox("Choose a Filter", [
-        "Gaussian Filter",
-        "Median Filter", 
         "Butterworth Low-Pass", 
         "Anisotropic Diffusion", 
         "Median Filter", 
-        "Bilateral Filter"
-        
+        "Bilateral Filter",
+        "Gaussian Filter"
     ])
 
     if filter_choice == "Butterworth Low-Pass":
