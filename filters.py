@@ -51,6 +51,9 @@ def gaussian_filter(image, filter_size=3, sigma=1):
     return np.array(filtered_image)
 
 
+
+
+
 def butterworth_lowpass_filter(image, cutoff_freq, n=8):
     """Apply a Butterworth low-pass filter in the frequency domain to a color image."""
     filtered_image = np.zeros_like(image, dtype=np.float32)
@@ -135,3 +138,49 @@ def median_filter(image, filter_size=5):
             new_pixels[x, y] = (int(median_r), int(median_g), int(median_b))
 
     return np.array(filtered_image)
+
+
+def gaussian(x, sigma):
+    return np.exp(- (x ** 2) / (2 * sigma ** 2))
+
+def bilateral_filter_color(image, d, sigma_s, sigma_r):
+    """Bilateral filter for RGB images."""
+    image = image.astype(np.float32)
+    filtered_image = np.zeros_like(image)
+
+    rows, cols, channels = image.shape
+    half_d = d // 2
+
+    # Precompute spatial Gaussian
+    spatial_kernel = np.zeros((d, d))
+    for i in range(d):
+        for j in range(d):
+            x, y = i - half_d, j - half_d
+            spatial_kernel[i, j] = gaussian(np.sqrt(x**2 + y**2), sigma_s)
+
+    for i in range(rows):
+        for j in range(cols):
+            W_p = 0
+            filtered_pixel = np.zeros(3)
+
+            for k in range(-half_d, half_d + 1):
+                for l in range(-half_d, half_d + 1):
+                    x = i + k
+                    y = j + l
+
+                    if 0 <= x < rows and 0 <= y < cols:
+                        diff = image[x, y] - image[i, j]
+                        diff_norm = np.linalg.norm(diff)
+
+                        range_weight = gaussian(diff_norm, sigma_r)
+                        weight = spatial_kernel[k + half_d, l + half_d] * range_weight
+
+                        filtered_pixel += weight * image[x, y]
+                        W_p += weight
+
+            if W_p != 0:
+                filtered_image[i, j] = filtered_pixel / W_p
+            else:
+                filtered_image[i, j] = image[i, j]
+
+    return np.clip(filtered_image, 0, 255).astype(np.uint8)
