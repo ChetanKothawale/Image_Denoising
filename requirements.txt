@@ -2,3 +2,4 @@ streamlit
 imageio
 numpy
 matplotlib
+pillow
