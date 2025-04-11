@@ -5,4 +5,3 @@ matplotlib
 pillow
 torch
 torchvision
-scikit-image
