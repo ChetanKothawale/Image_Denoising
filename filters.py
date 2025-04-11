@@ -217,7 +217,6 @@ def bm3d_denoise_poisson(img, sigma=0.1, block_size=8, step=4, max_blocks=16):
     denoised_img = inverse_anscombe_transform(denoised_transformed)
 
 
-# === High-Pass Filter ===
 def high_pass_filter_frequency(image_array, cutoff=0.1):
 
     def filter_channel(image_channel):
