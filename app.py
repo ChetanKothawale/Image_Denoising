@@ -5,7 +5,7 @@ import torch
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
-from unet_model import load_unet_model, denoise_image_unet
+
 
 # Set up Streamlit UI
 st.title("Denoising Noisy Images with Deep Learning & Traditional Filters")
@@ -110,14 +110,6 @@ if uploaded_file:
                 st.error(f"Error: {e}")
                 denoised_image = noisy_image
 
-    elif denoise_choice == "U-Net (Deep Learning)":
-        if st.button("Denoise Image"):
-            try:
-                noisy_tensor = preprocess_image(uploaded_file)
-                denoised_image = denoise_image_unet(unet_model, noisy_tensor)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                denoised_image = noisy_image
 
     if "denoised_image" in locals():
         col1, col2 = st.columns(2)
