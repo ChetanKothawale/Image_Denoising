@@ -99,15 +99,6 @@ if uploaded_file:
         if st.button("Apply Filter"):
             filtered_image = high_pass_filter_frequency(image, cutoff)
 
-    elif denoise_choice == "DnCNN (Deep Learning)":
-        if st.button("Denoise Image"):
-            try:
-                noisy_tensor, _ = load_image(uploaded_file)
-                denoised_image = denoise_image(dncnn_model, noisy_tensor, device)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                denoised_image = noisy_image
-
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
             try:
@@ -117,14 +108,7 @@ if uploaded_file:
                 st.error(f"Error: {e}")
                 denoised_image = noisy_image
 
-    elif denoise_choice == "U-Net (Deep Learning)":
-        if st.button("Denoise Image"):
-            try:
-                noisy_tensor = preprocess_image(uploaded_file)
-                denoised_image = denoise_image_unet(unet_model, noisy_tensor)
-            except Exception as e:
-                st.error(f"Error: {e}")
-                denoised_image = noisy_image
+
 
     if "denoised_image" in locals():
         col1, col2 = st.columns(2)
