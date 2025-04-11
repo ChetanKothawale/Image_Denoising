@@ -21,13 +21,6 @@ try:
 except Exception as e:
     st.error(f"Error loading GAN model: {e}")
 
-# Load U-Net model
-unet_model_path = "denoising_unet_color_pytorch.pth"
-try:
-    unet_model = load_unet_model(unet_model_path)
-    st.success("U-Net Model Loaded Successfully")
-except Exception as e:
-    st.error(f"Error loading U-Net model: {e}")
 
 if uploaded_file:
     noisy_image = imageio.imread(uploaded_file)
