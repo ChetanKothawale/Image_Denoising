@@ -42,7 +42,7 @@ if uploaded_file:
     # Select denoising method
     denoise_choice = st.selectbox(
         "Choose a Denoising Method",
-        [
+        [   "Butterworth Low-Pass", 
             "Anisotropic Diffusion",
             "Median Filter",
             "Bilateral Filter",
@@ -53,7 +53,14 @@ if uploaded_file:
     )
 
     # Apply selected denoising method
-    if denoise_choice == "Anisotropic Diffusion":
+
+
+    if filter_choice == "Butterworth Low-Pass":
+        cutoff = st.slider("Cutoff Frequency", min_value=10, max_value=200, value=60)
+        if st.button("Apply Filter"):
+            filtered_image = butterworth_lowpass_filter(image, cutoff)
+    
+    elif denoise_choice == "Anisotropic Diffusion":
         iterations = st.slider("Iterations", min_value=5, max_value=50, value=20)
         kappa = st.slider("Kappa", min_value=10, max_value=100, value=30)
         gamma = st.slider("Gamma", min_value=0.05, max_value=0.5, value=0.2)
