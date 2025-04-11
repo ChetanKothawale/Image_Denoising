@@ -53,8 +53,7 @@ if uploaded_file:
             "Median Filter",
             "Bilateral Filter",
             "Gaussian Filter",
-            "Mean Filter",
-            "DnCNN (Deep Learning)",
+            "Mean Filter"
             "GAN-Based Denoising"
            
         ],
