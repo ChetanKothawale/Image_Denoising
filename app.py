@@ -3,7 +3,7 @@ import numpy as np
 import imageio
 import torch
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
-from denoise_model import load_image, load_dncnn_model, denoise_image
+from DnCNN import load_image, load_dncnn_model, denoise_image
 
 st.title("Image Filtering & Denoising with Streamlit")
 
