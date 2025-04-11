@@ -13,14 +13,6 @@ uploaded_file = st.file_uploader("Upload a Noisy Image", type=["png", "jpg", "jp
 # Load Deep Learning Models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Load DnCNN model
-dncnn_model_path = "model.pth"
-try:
-    dncnn_model = load_dncnn_model(dncnn_model_path, device)
-    st.success("DnCNN Model Loaded Successfully")
-except Exception as e:
-    st.error(f"Error loading DnCNN model: {e}")
-
 # Load GAN model
 gan_model_path = "generator_model.pth"
 try:
