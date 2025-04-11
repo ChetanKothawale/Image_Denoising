@@ -82,7 +82,7 @@ if uploaded_file:
             denoised_image = mean_filter(noisy_image, kernel_size)
 
 
-    elif filter_choice == "High-Pass Filter":
+    elif denoise_choice == "High-Pass Filter":
         cutoff = st.slider("Cutoff Frequency", min_value=0.1, max_value=1.0, value=0.4)
         if st.button("Apply Filter"):
             filtered_image = high_pass_filter_frequency(image, cutoff)
