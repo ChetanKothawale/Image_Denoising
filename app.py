@@ -4,7 +4,7 @@ import imageio
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 
 
-import streamlit as st
+
 
 st.set_page_config(page_title="Image Filtering", layout="wide")
 
