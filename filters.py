@@ -219,6 +219,7 @@ def high_pass_filter_frequency(image_array, cutoff=0.1):
     
         return np.clip(filtered_channel, 0, 255).astype(np.uint8)
 
+
     
     if len(image_array.shape) == 3:  # RGB Image
         return np.stack([filter_channel(image_array[:, :, i]) for i in range(3)], axis=-1)
