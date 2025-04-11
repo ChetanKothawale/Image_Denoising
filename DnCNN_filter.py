@@ -28,16 +28,21 @@ def load_image(image):
     img_tensor = torch.from_numpy(img_array).unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
     return img_tensor, img_array  # Return tensor for processing and array for display
 
-# ✅ FIXED: Function to load the trained model safely
+# ✅ FIXED: Function to load the trained model correctly
 def load_dncnn_model(model_path, device):
     try:
-        # ✅ Step 1: Ensure PyTorch knows where to find DnCNN
+        # ✅ Step 1: Initialize a new DnCNN model
         model = DnCNN(depth=17, n_channels=64, image_channels=1).to(device)
 
-        # ✅ Step 2: Explicitly tell PyTorch to load only model weights (not architecture)
+        # ✅ Step 2: Load the model state dictionary
         state_dict = torch.load(model_path, map_location=device)
 
-        # ✅ Step 3: Load weights into the initialized model
+        # ✅ Step 3: If the model was saved using DataParallel, remove "module." prefix
+        if any(k.startswith("module.") for k in state_dict.keys()):
+            print("Detected DataParallel model. Converting to single-GPU mode...")
+            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+
+        # ✅ Step 4: Load the state dictionary into the model
         model.load_state_dict(state_dict)
         model.eval()
         return model
