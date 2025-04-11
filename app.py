@@ -5,6 +5,7 @@ import torch
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
+from unet_model import load_unet_model, denoise_image_unet
 
 # Set up Streamlit UI
 st.title("Denoising Noisy Images with Deep Learning & Traditional Filters")
@@ -30,36 +31,41 @@ try:
 except Exception as e:
     st.error(f"Error loading GAN model: {e}")
 
+# Load U-Net model
+unet_model_path = "denoising_unet_color_pytorch.pth"
+try:
+    unet_model = load_unet_model(unet_model_path)
+    st.success("U-Net Model Loaded Successfully")
+except Exception as e:
+    st.error(f"Error loading U-Net model: {e}")
+
 if uploaded_file:
-    # Read and display the noisy image
     noisy_image = imageio.imread(uploaded_file)
 
     if noisy_image.ndim == 2:
-        noisy_image = np.stack([noisy_image] * 3, axis=-1)  # Convert grayscale to RGB
+        noisy_image = np.stack([noisy_image] * 3, axis=-1)
 
     st.image(noisy_image, caption="Noisy Image", use_column_width=True)
 
-    # Select denoising method
     denoise_choice = st.selectbox(
         "Choose a Denoising Method",
-        [   "Butterworth Low-Pass", 
+        [
+            "Butterworth Low-Pass",
             "Anisotropic Diffusion",
             "Median Filter",
             "Bilateral Filter",
             "Gaussian Filter",
             "DnCNN (Deep Learning)",
-            "GAN-Based Denoising"
+            "GAN-Based Denoising",
+            "U-Net (Deep Learning)"
         ],
     )
 
-    # Apply selected denoising method
-
-
-    if filter_choice == "Butterworth Low-Pass":
+    if denoise_choice == "Butterworth Low-Pass":
         cutoff = st.slider("Cutoff Frequency", min_value=10, max_value=200, value=60)
-        if st.button("Apply Filter"):
-            filtered_image = butterworth_lowpass_filter(image, cutoff)
-    
+        if st.button("Denoise Image"):
+            denoised_image = butterworth_lowpass_filter(noisy_image, cutoff)
+
     elif denoise_choice == "Anisotropic Diffusion":
         iterations = st.slider("Iterations", min_value=5, max_value=50, value=20)
         kappa = st.slider("Kappa", min_value=10, max_value=100, value=30)
@@ -93,7 +99,7 @@ if uploaded_file:
                 denoised_image = denoise_image(dncnn_model, noisy_tensor, device)
             except Exception as e:
                 st.error(f"Error: {e}")
-                denoised_image = noisy_image  # Return original if error
+                denoised_image = noisy_image
 
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
@@ -102,9 +108,17 @@ if uploaded_file:
                 denoised_image = gan_denoise_image(gan_model, noisy_tensor)
             except Exception as e:
                 st.error(f"Error: {e}")
-                denoised_image = noisy_image  # Return original if error
+                denoised_image = noisy_image
 
-    # Display results
+    elif denoise_choice == "U-Net (Deep Learning)":
+        if st.button("Denoise Image"):
+            try:
+                noisy_tensor = preprocess_image(uploaded_file)
+                denoised_image = denoise_image_unet(unet_model, noisy_tensor)
+            except Exception as e:
+                st.error(f"Error: {e}")
+                denoised_image = noisy_image
+
     if "denoised_image" in locals():
         col1, col2 = st.columns(2)
         with col1:
