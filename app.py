@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import imageio
 import torch
-from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter, mean_filter
+from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter, mean_filter, bm3d_denoise_poisson, high_pass_filter_frequency
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
 
 # Set up Streamlit UI
@@ -54,6 +54,8 @@ if uploaded_file:
             "Bilateral Filter",
             "Gaussian Filter",
             "Mean Filter",
+            "BM3D Poisson Noise Reduction",
+            "High-Pass Filter",
             "GAN-Based Denoising"
            
         ],
@@ -94,6 +96,16 @@ if uploaded_file:
         kernel_size = st.slider("Kernel Size", min_value=3, max_value=15, value=7, step=2)
         if st.button("Denoise Image"):
             denoised_image = mean_filter(noisy_image, kernel_size)
+
+    elif filter_choice == "BM3D Poisson Noise Reduction":
+        sigma = st.slider("Noise Level (σ)", min_value=0.05, max_value=1.0, value=0.1)
+        if st.button("Apply Filter"):
+            filtered_image = bm3d_denoise_poisson(image, sigma)
+
+    elif filter_choice == "High-Pass Filter":
+        cutoff = st.slider("Cutoff Frequency", min_value=0.1, max_value=1.0, value=0.4)
+        if st.button("Apply Filter"):
+            filtered_image = high_pass_filter_frequency(image, cutoff)
 
     elif denoise_choice == "DnCNN (Deep Learning)":
         if st.button("Denoise Image"):
