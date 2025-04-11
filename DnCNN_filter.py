@@ -28,13 +28,22 @@ def load_image(image):
     img_tensor = torch.from_numpy(img_array).unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
     return img_tensor, img_array  # Return tensor for processing and array for display
 
-# Function to load the trained model
+# Function to load the trained model safely
 def load_dncnn_model(model_path, device):
-    model = DnCNN(depth=17, n_channels=64, image_channels=1).to(device)
-    state_dict = torch.load(model_path, map_location=device)
-    model.load_state_dict(state_dict)
-    model.eval()
-    return model
+    try:
+        # Step 1: Register the DnCNN class
+        torch.serialization.add_safe_globals({"DnCNN": DnCNN})
+
+        # Step 2: Load the model
+        state_dict = torch.load(model_path, map_location=device, weights_only=False)
+
+        # Step 3: Initialize the model and load weights
+        model = DnCNN(depth=17, n_channels=64, image_channels=1).to(device)
+        model.load_state_dict(state_dict)
+        model.eval()
+        return model
+    except Exception as e:
+        raise ValueError(f"Error loading model: {e}")
 
 # Function to denoise the image
 def denoise_image(model, image_tensor, device):
