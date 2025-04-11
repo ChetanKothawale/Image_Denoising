@@ -85,7 +85,7 @@ if uploaded_file:
     elif denoise_choice == "High-Pass Filter":
         cutoff = st.slider("Cutoff Frequency", min_value=0.1, max_value=1.0, value=0.4)
         if st.button("Apply Filter"):
-            denoised_image = high_pass_filter_frequency(image, cutoff)
+            denoised_image = high_pass_filter_frequency(noisy_image, cutoff)
 
     elif denoise_choice == "GAN-Based Denoising":
         if st.button("Denoise Image"):
