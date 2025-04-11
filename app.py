@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import imageio
 import torch
-from filters import anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
+from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
 
