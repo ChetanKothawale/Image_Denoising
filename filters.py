@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 import statistics
 import math
+from scipy.ndimage import convolve
 
 
 def gaussian_kernel(size, sigma=1):
@@ -184,3 +185,16 @@ def bilateral_filter_color(image, d, sigma_s, sigma_r):
                 filtered_image[i, j] = image[i, j]
 
     return np.clip(filtered_image, 0, 255).astype(np.uint8)
+
+
+
+def mean_filter(image_array, kernel_size=7):
+    """Apply a mean filter for denoising using convolution."""
+    kernel = np.ones((kernel_size, kernel_size)) / (kernel_size ** 2)
+    filtered_image = np.zeros_like(image_array, dtype=float)
+    
+    for c in range(image_array.shape[2]):
+        filtered_image[..., c] = convolve(image_array[..., c].astype(float), kernel, mode='reflect')
+    
+    return np.clip(filtered_image, 0, 255).astype(np.uint8)
+
