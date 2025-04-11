@@ -28,17 +28,16 @@ def load_image(image):
     img_tensor = torch.from_numpy(img_array).unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
     return img_tensor, img_array  # Return tensor for processing and array for display
 
-# Function to load the trained model safely
+# ✅ FIXED: Function to load the trained model safely
 def load_dncnn_model(model_path, device):
     try:
-        # Step 1: Register the DnCNN class
-        torch.serialization.add_safe_globals({"DnCNN": DnCNN})
-
-        # Step 2: Load the model
-        state_dict = torch.load(model_path, map_location=device, weights_only=False)
-
-        # Step 3: Initialize the model and load weights
+        # ✅ Step 1: Ensure PyTorch knows where to find DnCNN
         model = DnCNN(depth=17, n_channels=64, image_channels=1).to(device)
+
+        # ✅ Step 2: Explicitly tell PyTorch to load only model weights (not architecture)
+        state_dict = torch.load(model_path, map_location=device)
+
+        # ✅ Step 3: Load weights into the initialized model
         model.load_state_dict(state_dict)
         model.eval()
         return model
