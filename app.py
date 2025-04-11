@@ -7,18 +7,52 @@ from skimage.metrics import structural_similarity as ssim
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 
-st.title("Image Filtering & Denoising with Streamlit")
+st.title("Image Denoising Evaluation with Streamlit")
 
-uploaded_file = st.file_uploader("Upload an Image", type=["png", "jpg", "jpeg"])
+# File uploaders for both original and noisy images
+col1, col2 = st.columns(2)
+with col1:
+    original_file = st.file_uploader("Upload Original Clean Image", type=["png", "jpg", "jpeg"])
+with col2:
+    noisy_file = st.file_uploader("Upload Noisy Image", type=["png", "jpg", "jpeg"])
 
-if uploaded_file:
-    image = imageio.imread(uploaded_file)
+if original_file and noisy_file:
+    original_image = imageio.imread(original_file)
+    noisy_image = imageio.imread(noisy_file)
     
-    if image.ndim == 2:
-        image = np.stack([image] * 3, axis=-1)  # Convert grayscale to RGB
+    # Convert grayscale to RGB if needed
+    if original_image.ndim == 2:
+        original_image = np.stack([original_image] * 3, axis=-1)
+    if noisy_image.ndim == 2:
+        noisy_image = np.stack([noisy_image] * 3, axis=-1)
+    
+    # Display original and noisy images
+    st.subheader("Input Images")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(original_image, caption="Original Clean Image", use_column_width=True)
+    with col2:
+        st.image(noisy_image, caption="Noisy Image", use_column_width=True)
+    
+    # Calculate metrics between original and noisy image
+    st.subheader("Noise Level Metrics")
+    if original_image.shape == noisy_image.shape:
+        try:
+            noisy_psnr = psnr(original_image, noisy_image, data_range=255)
+            noisy_ssim = ssim(
+                np.mean(original_image, axis=2) if original_image.ndim == 3 else original_image,
+                np.mean(noisy_image, axis=2) if noisy_image.ndim == 3 else noisy_image,
+                data_range=255
+            )
+            st.write(f"PSNR (Original vs Noisy): {noisy_psnr:.2f} dB")
+            st.write(f"SSIM (Original vs Noisy): {noisy_ssim:.4f}")
+        except ValueError as e:
+            st.warning(f"Could not calculate noise level metrics: {e}")
+    else:
+        st.warning("Original and noisy images must have the same dimensions for comparison")
 
     # Select filter type
-    filter_choice = st.selectbox("Choose a Filter", [
+    filter_choice = st.selectbox("Choose a Denoising Filter", [
         "Butterworth Low-Pass", 
         "Anisotropic Diffusion", 
         "Median Filter", 
@@ -30,7 +64,7 @@ if uploaded_file:
     if filter_choice == "Butterworth Low-Pass":
         cutoff = st.slider("Cutoff Frequency", min_value=10, max_value=200, value=60)
         if st.button("Apply Filter"):
-            filtered_image = butterworth_lowpass_filter(image, cutoff)
+            filtered_image = butterworth_lowpass_filter(noisy_image, cutoff)
 
     elif filter_choice == "Anisotropic Diffusion":
         iterations = st.slider("Iterations", min_value=5, max_value=50, value=20)
@@ -38,25 +72,25 @@ if uploaded_file:
         gamma = st.slider("Gamma", min_value=0.05, max_value=0.5, value=0.2)
         option = st.radio("Diffusion Function", [1, 2])
         if st.button("Apply Filter"):
-            filtered_image = anisotropic_diffusion(image, iterations, kappa, gamma, option)
+            filtered_image = anisotropic_diffusion(noisy_image, iterations, kappa, gamma, option)
 
     elif filter_choice == "Median Filter":
         filter_size = st.slider("Filter Size", min_value=3, max_value=15, value=5, step=2)
         if st.button("Apply Filter"):
-            filtered_image = median_filter(image, filter_size)
+            filtered_image = median_filter(noisy_image, filter_size)
 
     elif filter_choice == "Bilateral Filter":
         d = st.slider("Filter Window Size", min_value=3, max_value=15, value=9, step=2)
         sigma_s = st.slider("Spatial Sigma", min_value=1, max_value=50, value=10)
         sigma_r = st.slider("Range Sigma", min_value=1, max_value=100, value=25)
         if st.button("Apply Filter"):
-            filtered_image = bilateral_filter_color(image, d, sigma_s, sigma_r)
+            filtered_image = bilateral_filter_color(noisy_image, d, sigma_s, sigma_r)
 
     elif filter_choice == "Gaussian Filter":
         filter_size = st.slider("Filter Size", min_value=3, max_value=15, value=3, step=2)
         sigma = st.slider("Sigma Value", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
         if st.button("Apply Filter"):
-            filtered_image = gaussian_filter(image, filter_size, sigma)
+            filtered_image = gaussian_filter(noisy_image, filter_size, sigma)
 
     elif filter_choice == "DnCNN (Deep Learning) Denoising":
         model_path = "model.pth"  # Path to your trained model
@@ -65,40 +99,48 @@ if uploaded_file:
         if st.button("Apply DnCNN Model"):
             try:
                 model = load_dncnn_model(model_path, device)
-                noisy_tensor, noisy_array = load_image(uploaded_file)
+                noisy_tensor, _ = load_image(noisy_file)
                 filtered_image = denoise_image(model, noisy_tensor, device)
+                filtered_image = filtered_image.cpu().numpy().transpose(1, 2, 0)
+                filtered_image = (filtered_image * 255).astype(np.uint8)
             except Exception as e:
                 st.error(f"Error: {e}")
-                filtered_image = image  # Return original if error
+                filtered_image = noisy_image  # Return noisy if error
 
     # Display results
     if "filtered_image" in locals():
+        st.subheader("Denoising Results")
         col1, col2 = st.columns(2)
         with col1:
-            st.image(image, caption="Original Image", use_column_width=True)
+            st.image(noisy_image, caption="Noisy Image", use_column_width=True)
         with col2:
-            st.image(filtered_image, caption="Filtered Image", use_column_width=True)
+            st.image(filtered_image, caption="Denoised Image", use_column_width=True)
         
-        # Calculate and display metrics
-        st.subheader("Image Quality Metrics")
+        # Calculate and display metrics comparing denoised with original
+        st.subheader("Denoising Quality Metrics")
         
-        # Convert images to grayscale for SSIM calculation if they're RGB
-        if image.ndim == 3:
-            image_gray = np.mean(image, axis=2)
-            filtered_gray = np.mean(filtered_image, axis=2)
+        if original_image.shape == filtered_image.shape:
+            try:
+                # PSNR calculation
+                denoised_psnr = psnr(original_image, filtered_image, data_range=255)
+                
+                # SSIM calculation (convert to grayscale if needed)
+                original_gray = np.mean(original_image, axis=2) if original_image.ndim == 3 else original_image
+                filtered_gray = np.mean(filtered_image, axis=2) if filtered_image.ndim == 3 else filtered_image
+                denoised_ssim = ssim(original_gray, filtered_gray, data_range=255)
+                
+                st.write(f"PSNR (Original vs Denoised): {denoised_psnr:.2f} dB")
+                st.write(f"SSIM (Original vs Denoised): {denoised_ssim:.4f}")
+                
+                # Show improvement over noisy image
+                if 'noisy_psnr' in locals() and 'noisy_ssim' in locals():
+                    st.write(f"PSNR Improvement: {denoised_psnr - noisy_psnr:.2f} dB")
+                    st.write(f"SSIM Improvement: {denoised_ssim - noisy_ssim:.4f}")
+                
+                # Interpretation
+                st.caption("Higher PSNR values indicate better quality (typically >30 dB is good).")
+                st.caption("SSIM ranges from -1 to 1, with 1 being perfect similarity.")
+            except ValueError as e:
+                st.warning(f"Could not calculate metrics: {e}")
         else:
-            image_gray = image
-            filtered_gray = filtered_image
-            
-        try:
-            psnr_value = psnr(image, filtered_image, data_range=255)
-            ssim_value = ssim(image_gray, filtered_gray, data_range=255)
-            
-            st.write(f"PSNR: {psnr_value:.2f} dB")
-            st.write(f"SSIM: {ssim_value:.4f}")
-            
-            # Interpretation
-            st.caption("Higher PSNR values indicate better quality (typically >30 dB is good).")
-            st.caption("SSIM ranges from -1 to 1, with 1 being perfect similarity.")
-        except ValueError as e:
-            st.warning(f"Could not calculate metrics: {e}")
+            st.warning("Original and denoised images must have the same dimensions for comparison")
