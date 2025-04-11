@@ -8,7 +8,7 @@ from gan_model import load_gan_model, preprocess_image, denoise_image as gan_den
 from unet_model import load_unet_model, denoise_image_unet
 
 # Set up Streamlit UI
-st.title("Denoising Noisy Images with Deep Learning & Traditional Filters")
+st.title("Denoising the Images with Deep Learning & Traditional Filters")
 
 uploaded_file = st.file_uploader("Upload a Noisy Image", type=["png", "jpg", "jpeg"])
 
