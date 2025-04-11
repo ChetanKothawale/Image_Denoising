@@ -2,10 +2,10 @@ import streamlit as st
 import numpy as np
 import imageio
 import torch
-from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
+from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter, mean_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 from gan_model import load_gan_model, preprocess_image, denoise_image as gan_denoise_image
-
+from unet_model import load_unet_model, denoise_image_unet
 
 # Set up Streamlit UI
 st.title("Denoising Noisy Images with Deep Learning & Traditional Filters")
@@ -16,7 +16,7 @@ uploaded_file = st.file_uploader("Upload a Noisy Image", type=["png", "jpg", "jp
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load DnCNN model
-dncnn_model_path = "DnCNN_model.pth"
+dncnn_model_path = "model.pth"
 try:
     dncnn_model = load_dncnn_model(dncnn_model_path, device)
     st.success("DnCNN Model Loaded Successfully")
@@ -32,6 +32,12 @@ except Exception as e:
     st.error(f"Error loading GAN model: {e}")
 
 # Load U-Net model
+unet_model_path = "denoising_unet_color_pytorch.pth"
+try:
+    unet_model = load_unet_model(unet_model_path)
+    st.success("U-Net Model Loaded Successfully")
+except Exception as e:
+    st.error(f"Error loading U-Net model: {e}")
 
 if uploaded_file:
     noisy_image = imageio.imread(uploaded_file)
@@ -49,9 +55,10 @@ if uploaded_file:
             "Median Filter",
             "Bilateral Filter",
             "Gaussian Filter",
+            "Mean Filter",
             "DnCNN (Deep Learning)",
-            "GAN-Based Denoising"
-         
+            "GAN-Based Denoising",
+            "U-Net (Deep Learning)"
         ],
     )
 
@@ -86,6 +93,11 @@ if uploaded_file:
         if st.button("Denoise Image"):
             denoised_image = gaussian_filter(noisy_image, filter_size, sigma)
 
+    elif denoise_choice == "Mean Filter":
+        kernel_size = st.slider("Kernel Size", min_value=3, max_value=15, value=7, step=2)
+        if st.button("Denoise Image"):
+            denoised_image = mean_filter(noisy_image, kernel_size)
+
     elif denoise_choice == "DnCNN (Deep Learning)":
         if st.button("Denoise Image"):
             try:
@@ -104,6 +116,14 @@ if uploaded_file:
                 st.error(f"Error: {e}")
                 denoised_image = noisy_image
 
+    elif denoise_choice == "U-Net (Deep Learning)":
+        if st.button("Denoise Image"):
+            try:
+                noisy_tensor = preprocess_image(uploaded_file)
+                denoised_image = denoise_image_unet(unet_model, noisy_tensor)
+            except Exception as e:
+                st.error(f"Error: {e}")
+                denoised_image = noisy_image
 
     if "denoised_image" in locals():
         col1, col2 = st.columns(2)
