@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import imageio
 import torch
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 from DnCNN_filter import load_image, load_dncnn_model, denoise_image
 
@@ -76,3 +78,27 @@ if uploaded_file:
             st.image(image, caption="Original Image", use_column_width=True)
         with col2:
             st.image(filtered_image, caption="Filtered Image", use_column_width=True)
+        
+        # Calculate and display metrics
+        st.subheader("Image Quality Metrics")
+        
+        # Convert images to grayscale for SSIM calculation if they're RGB
+        if image.ndim == 3:
+            image_gray = np.mean(image, axis=2)
+            filtered_gray = np.mean(filtered_image, axis=2)
+        else:
+            image_gray = image
+            filtered_gray = filtered_image
+            
+        try:
+            psnr_value = psnr(image, filtered_image, data_range=255)
+            ssim_value = ssim(image_gray, filtered_gray, data_range=255)
+            
+            st.write(f"PSNR: {psnr_value:.2f} dB")
+            st.write(f"SSIM: {ssim_value:.4f}")
+            
+            # Interpretation
+            st.caption("Higher PSNR values indicate better quality (typically >30 dB is good).")
+            st.caption("SSIM ranges from -1 to 1, with 1 being perfect similarity.")
+        except ValueError as e:
+            st.warning(f"Could not calculate metrics: {e}")
