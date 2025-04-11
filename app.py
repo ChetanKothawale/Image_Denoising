@@ -3,25 +3,6 @@ import numpy as np
 import imageio
 from filters import butterworth_lowpass_filter, anisotropic_diffusion, median_filter, bilateral_filter_color, gaussian_filter
 
-
-
-
-st.set_page_config(page_title="Image Filtering", layout="wide")
-
-st.title("Welcome to the Image Filtering App")
-
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Traditional Filters", "Deep Learning Denoising"])
-
-if page == "Traditional Filters":
-    st.switch_page("app.py")  # This should contain the traditional filtering UI
-elif page == "Deep Learning Denoising":
-    st.switch_page("pages/dl_denoising.py")  # Load the DL-based page
-
-
-
-
-
 st.title("Image Filtering with Streamlit")
 
 uploaded_file = st.file_uploader("Upload an Image", type=["png", "jpg", "jpeg"])
