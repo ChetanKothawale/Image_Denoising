@@ -16,7 +16,7 @@ uploaded_file = st.file_uploader("Upload a Noisy Image", type=["png", "jpg", "jp
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load DnCNN model
-dncnn_model_path = "model.pth"
+dncnn_model_path = "DnCNN_model.pth"
 try:
     dncnn_model = load_dncnn_model(dncnn_model_path, device)
     st.success("DnCNN Model Loaded Successfully")
